@@ -34,3 +34,16 @@ curl -X POST http://localhost:8080/fiadopay/gateway/payments   -H "Authorization
 ```bash
 curl http://localhost:8080/fiadopay/gateway/payments/<paymentId>
 ```
+
+
+Lucas Lago Ferreira:
+
+
+### Anotações Implementadas
+- `@AsyncProcessor` - Para métodos de processamento assíncrono
+- `@PaymentMethod` - Para tipos de pagamento
+- `@AntiFraud` - Para regras de antifraude
+
+### Reflexão
+- `AnnotationScanner` detecta automaticamente anotações durante a inicialização
+- Logs mostram métodos anotados e configurações
