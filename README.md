@@ -36,7 +36,7 @@ curl http://localhost:8080/fiadopay/gateway/payments/<paymentId>
 ```
 
 
-Lucas Lago Ferreira:
+Alterações:
 
 
 ### Anotações Implementadas
@@ -47,3 +47,9 @@ Lucas Lago Ferreira:
 ### Reflexão
 - `AnnotationScanner` detecta automaticamente anotações durante a inicialização
 - Logs mostram métodos anotados e configurações
+
+
+### Threads e Concorrência
+- `paymentPool` - 5 threads para processar pagamentos
+- `webhookPool` - 3 threads para enviar webhooks
+- `ExecutorService` substitui `CompletableFuture.runAsync()`
