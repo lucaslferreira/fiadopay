@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsal.fiadopay.annotations.AsyncProcessor;
 import edu.ucsal.fiadopay.annotations.PaymentMethod;
 import edu.ucsal.fiadopay.annotations.AntiFraud;
+import org.springframework.beans.factory.annotation.Qualifier;
+import java.util.concurrent.ExecutorService;
 import edu.ucsal.fiadopay.controller.PaymentRequest;
 import edu.ucsal.fiadopay.controller.PaymentResponse;
 import edu.ucsal.fiadopay.domain.Merchant;
@@ -36,16 +38,20 @@ public class PaymentService {
   private final PaymentRepository payments;
   private final WebhookDeliveryRepository deliveries;
   private final ObjectMapper objectMapper;
+  private final ExecutorService paymentPool;
+  private final ExecutorService webhookPool;
 
   @Value("${fiadopay.webhook-secret}") String secret;
   @Value("${fiadopay.processing-delay-ms}") long delay;
   @Value("${fiadopay.failure-rate}") double failRate;
 
-  public PaymentService(MerchantRepository merchants, PaymentRepository payments, WebhookDeliveryRepository deliveries, ObjectMapper objectMapper) {
+  public PaymentService(MerchantRepository merchants, PaymentRepository payments, WebhookDeliveryRepository deliveries, ObjectMapper objectMapper, @Qualifier("paymentPool") ExecutorService paymentPool, @Qualifier("webhookPool") ExecutorService webhookPool) {
     this.merchants = merchants;
     this.payments = payments;
     this.deliveries = deliveries;
     this.objectMapper = objectMapper;
+    this.paymentPool = paymentPool;
+    this.webhookPool = webhookPool;
   }
 
   private Merchant merchantFromAuth(String auth){
@@ -104,7 +110,7 @@ public class PaymentService {
 
     payments.save(payment);
 
-    CompletableFuture.runAsync(() -> processAndWebhook(payment.getId()));
+    paymentPool.submit(() -> processAndWebhook(payment.getId()));
 
     return toResponse(payment);
   }
@@ -178,7 +184,7 @@ public class PaymentService {
         .lastAttemptAt(null)
         .build());
 
-    CompletableFuture.runAsync(() -> tryDeliver(delivery.getId()));
+    webhookPool.submit(() -> tryDeliver(delivery.getId()));
   }
 
   private void tryDeliver(Long deliveryId){
