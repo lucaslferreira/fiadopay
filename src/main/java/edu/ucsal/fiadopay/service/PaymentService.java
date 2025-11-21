@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsal.fiadopay.annotations.AsyncProcessor;
 import edu.ucsal.fiadopay.annotations.PaymentMethod;
 import edu.ucsal.fiadopay.annotations.AntiFraud;
+import edu.ucsal.fiadopay.strategy.PaymentStrategy;
+import edu.ucsal.fiadopay.strategy.PaymentResult;
+import edu.ucsal.fiadopay.strategy.CreditCardStrategy;
 import org.springframework.beans.factory.annotation.Qualifier;
 import java.util.concurrent.ExecutorService;
 import edu.ucsal.fiadopay.controller.PaymentRequest;
@@ -83,14 +86,12 @@ public class PaymentService {
       if(existing.isPresent()) return toResponse(existing.get());
     }
 
-    Double interest = null;
-    BigDecimal total = req.amount();
-    if ("CARD".equalsIgnoreCase(req.method()) && req.installments()!=null && req.installments()>1){
-      interest = 1.0;
-      var base = new BigDecimal("1.01");
-      var factor = base.pow(req.installments());
-      total = req.amount().multiply(factor).setScale(2, RoundingMode.HALF_UP);
-    }
+    PaymentStrategy strategy = new CreditCardStrategy();
+    PaymentResult result = strategy.process(req.amount(), req.installments());
+
+    Double interest = result.interest();
+    BigDecimal total = result.total();
+
 
     var payment = Payment.builder()
         .id("pay_"+UUID.randomUUID().toString().substring(0,8))

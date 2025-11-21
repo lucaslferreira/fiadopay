@@ -36,13 +36,18 @@ curl http://localhost:8080/fiadopay/gateway/payments/<paymentId>
 ```
 
 
-Alterações:
+Alterações, melhorias implementadas:
 
 
 ### Anotações Implementadas
 - `@AsyncProcessor` - Para métodos de processamento assíncrono
+	Marca métodos que devem rodar em threads separadas
+
 - `@PaymentMethod` - Para tipos de pagamento
+	Preparado para marcar diferentes tipos de pagamento (PIX, cartão, etc.)
+	Facilita adicionar novos métodos de pagamento
 - `@AntiFraud` - Para regras de antifraude
+	Preparado para regras de segurança (bloquear pagamentos suspeitos)
 
 ### Reflexão
 - `AnnotationScanner` detecta automaticamente anotações durante a inicialização
@@ -53,3 +58,44 @@ Alterações:
 - `paymentPool` - 5 threads para processar pagamentos
 - `webhookPool` - 3 threads para enviar webhooks
 - `ExecutorService` substitui `CompletableFuture.runAsync()`
+
+
+### Arquitetura & padrões
+- Strategy pattern implementado:
+	Separando o cálculo de juros do resto do código, bom para fazer alterações no futuro
+- código organizado em packages:
+	annotations/: Só as anotações customizadas
+
+	strategy/: Só os cálculos de pagamento
+
+	config/: Só configurações de threads
+
+
+### Testes:
+Compilação: Código compila limpo
+
+Execução: Sistema sobe normalmente
+
+API: endpoints funcionando
+
+Threads: Processamento assíncrono ativo
+
+
+
+Instruções para executar:
+
+### Pré-requisitos:
+- Java 21 instalado
+- Git instalado
+
+### Passos:
+1. **Baixe o projeto:**
+   Terminal:
+
+   git clone https://github.com/lucaslferreira/fiadopay.git
+   cd fiadopay
+
+2. **Execute o projeto:**
+   ./mvnw spring-boot:run
+   Abra: http://localhost:8080/swagger-ui.html
+
